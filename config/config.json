@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "fatalitas",
+    "password": "iscomborch16",
+    "database": "database_development_myApiRest",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "fatalitas",
+    "password": "iscomborch16",
+    "database": "database_test_myApiRest",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "fatalitas",
+    "password": "iscomborch16",
+    "database": "database_production_myApiRest",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
