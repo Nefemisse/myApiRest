@@ -20,18 +20,15 @@ console.log(request.body)
         let role = request.body.role;
 
         if (lastName == null || firstName == null || email == null || password == null || role == null) {
-            console.log('--------1---------', request.body)
-            return response.status(400).json({'error': 'Missing parameters'});
+            return response.status(400).json({'error': 'An error occured : Missing parameters'});
         }
         
         if (!EMAIL_REGEX.test(email)) {
-            console.log('--------1.1---------', request.body)
-            return response.status(400).json({'error': 'email is not valid'})
+            return response.status(400).json({'error': 'An error occured : email is not valid'})
         }
 
         if (!PASWORD_REGEX.test(password)) {
-            console.log('--------1.2---------', request.body)
-            return response.status(400).json({'error': 'password invalid (must length 4 - 18 and include 1 number)'})
+            return response.status(400).json({'error': 'An error occured : password invalid (must length 4 - 18 and include 1 number)'})
         }
 
         // Waterfall
@@ -44,7 +41,6 @@ console.log(request.body)
         })
         .then(function(userFound) {
             if (!userFound) {
-                console.log('--------2--------',userFound, ': userfound', request.body, ': request')
                 bcrypt.hash(password, 5, function(err, bcryptedPassword) {
                     let newUser = models.users.create({
                         lastName: lastName,
@@ -54,96 +50,107 @@ console.log(request.body)
                         role: role
                     })
                     .then(function(newUser) {
-                        console.log('--------3---------') 
                         return response.status(201).json({
                             'userId': newUser.id, 'sucess': 'User successfully created'
                         })
                     })
                     .catch(function(err) {
-                        console.log('--------4---------', newUser, err)
                         return response.status(400).json({'error': 'An error occured.'})
                     })
                 })
             } else {
-                console.log('--------5---------')
                 return response.status(409).json({'error': 'user already exist.'})
             }
         })
         .catch(function(err) {
-            console.log('--------6---------')
             return response.status(500).json({'error': 'unable to verify user'})
         })
 
     },
-    update: (req, res) => {
-        const id = req.params.id;
-        Tutorial.update(req.body, {
-          where: { id: id }
+    update: (request, response) => {
+        const id = request.params.id;
+        let lastName = request.body.lastName;
+        let firstName = request.body.firstName;
+        let role = request.body.role;
+        let email= request.body.email;
+
+        models.users.update(request.params, {
+            attributes: ['id', 'lastName', 'firstName', 'email', 'role'],
+            where: { id: id }
+          })
+        .then(num => {
+        if (num == 1) {
+            response.status(200).send({
+            message: "User was modified successfully."
+            });
+        } else {
+            response.status(400).send({
+            message: `An error occurred : cannot update user with id=${id}.`
+            });
+        }
+        })
+        .catch(err => {
+        response.status(404).send({
+            message: "User with id=" + id + " was not found"
+        });
+        });
+      },
+    delete: (request, response) => {
+        // Parameters
+        const id = request.params.id;
+        models.users.destroy({
+            where: { id: id }
         })
           .then(num => {
             if (num == 1) {
-              res.send({
-                message: "Tutorial was updated successfully."
+            response.status(400).send({
+                message: "User successfully deleted"
               });
             } else {
-              res.send({
-                message: `Cannot update Tutorial with id=${id}. Maybe Tutorial was not found or req.body is empty!`
+                response.status(400).send({
+                message: `An error occurred : cannot delete user with id=${id}.`
               });
             }
           })
           .catch(err => {
-            res.status(500).send({
-              message: "Error updating Tutorial with id=" + id
+            response.status(404).send({
+              message: "User with id=" + id + " was not found"
             });
           });
       },
-    delete: (request, response) => {
+    searchOne: (request, response) => {
         // Parameters
-        let email = request.body.email;
-        let password = request.body.password;
-
-        if (email == null || password == null) {
-            return response.status(400).json({'error': 'missing parameters'})
-        }
-
-        models.users.findOne({
-            where: { email: email}
-        })
-        .then(function(userFound) {
-            if (userFound) {
-                console.log('-------------1--------------')
-                bcrypt.compare(password, userFound.password, function(errBycrypt, resBycrypt) {
-                    if (resBycrypt) {
-                        console.log('-------------2--------------')
-                        return res.status(200).json({
-                            'userId': userFound.id,
-                            'token': jwtUtils.generateTokenForUser(userFound)
-                        })
-                    } else {
-                        console.log('-------------3--------------')
-                        return res.status(403).json({'error': 'invalid password'})
-                    }
-                })
+        const id = request.params.id;
+        models.users.findByPk(id)
+        .then(data => {
+            if (data) {
+                response.status(200).send(data);
             } else {
-                console.log('-------------4--------------')
-                return response.status(404).json({'error': 'user not exist in DB'})
+            response.status(400).send({
+                message: `An error occurred : cannot delete user with id=${id}. Maybe user was not found!`
+              });
             }
-        })
-        .catch(function(err) {
-            console.log('-------------5--------------')
-            return response.status(500).json({'error': 'unable to verify user'})
-        })
-    },
-    search: (request, response) => {
-
-
-
-    },
-    search: (request, response) => {
-
-
-
-    },
+          })
+          .catch(err => {
+            response.status(400).send({
+              message: "An error occurred : could not delete user with id=" + id
+            });
+          });
+      },
+    searchAll: (request, response) => {
+        // Parameters
+        models.users.findAll()
+        .then(data => {
+            if (data) {
+                response.status(200).send(data);
+            }
+          })
+          .catch(err => {
+            response.status(400).send({
+              message: "An error occurred : while retrieving users."
+            });
+          });
+      },
     login: (request, response) => {
 
         // Parameters
@@ -159,26 +166,21 @@ console.log(request.body)
         })
         .then(function(userFound) {
             if (userFound) {
-                console.log('-------------1--------------')
                 bcrypt.compare(password, userFound.password, function(errBycrypt, resBycrypt) {
                     if (resBycrypt) {
-                        console.log('-------------2--------------')
                         return res.status(200).json({
                             'userId': userFound.id,
                             'token': jwtUtils.generateTokenForUser(userFound)
                         })
                     } else {
-                        console.log('-------------3--------------')
                         return res.status(403).json({'error': 'invalid password'})
                     }
                 })
             } else {
-                console.log('-------------4--------------')
                 return response.status(404).json({'error': 'user not exist in DB'})
             }
         })
         .catch(function(err) {
-            console.log('-------------5--------------')
             return response.status(500).json({'error': 'unable to verify user'})
         })
     }

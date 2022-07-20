@@ -8,11 +8,11 @@ exports.router = (function() {
 
     // Users routes
     apiRouter.route('/users/register/').post(usersCtrl.register)
+    apiRouter.route('/user/:id/').put(usersCtrl.update)
+    apiRouter.route('/user/:id/').delete(usersCtrl.delete)
+    apiRouter.route('/user/:id/').get(usersCtrl.searchOne)
+    apiRouter.route('/users/').get(usersCtrl.searchAll)
     apiRouter.route('/users/login/').post(usersCtrl.login)
-    apiRouter.route('/user/{id}/').put(usersCtrl.update)
-    apiRouter.route('/user/{id}/').delete(usersCtrl.delete)
-    apiRouter.route('/user/{id}/').get(usersCtrl.search)
-    apiRouter.route('/users/').get(usersCtrl.search)
-
+    
     return apiRouter;
 })();
