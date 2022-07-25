@@ -1,11 +1,11 @@
 // Imports
 let bcrypt = require('bcrypt');
 let jwtUtils = require('../utils/jwt.utils')
-let models = require('../models');
-const users = require('../models/users');
-const { response, request } = require('express');
+let models = require('../models')
+let users = require('../models/users');
+//const { response, request } = require('express');
 const asyncLib = require('async');
-const { parseAuthorization } = require('../utils/jwt.utils');
+//const { parseAuthorization } = require('../utils/jwt.utils');
 //const env = require("dotenv").config();
 
 // Constants
@@ -13,6 +13,7 @@ const EMAIL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"
 const PASWORD_REGEX = /^(?=.*\d).{4,18}$/
 
 // Routes
+// On exporte un objet dans lequel il y a plusieurs fonctions
 module.exports = {
     register: (request, response) => {
 //console.log(request.body)
@@ -74,7 +75,8 @@ module.exports = {
                     return response.status(500).json({'error': 'An error occurred : unable to verify user'})
                 });
             }
-        ],  (newUser) => {
+        ],  
+        (newUser) => {
             if(newUser) {
                 return response.status(201).json({
                     'userId': newUser.id, 'sucess': 'User successfully created'
@@ -84,45 +86,17 @@ module.exports = {
             }
         }) 
         //
-
-
-/*        .then(function(userFound) {
-            if (!userFound) {
-                bcrypt.hash(password, 5, function(err, bcryptedPassword) {
-                    let newUser = models.users.create({
-                        lastName: lastName,
-                        firstName: firstName,
-                        email: email,
-                        password: bcryptedPassword,
-                        role: role
-                    })
-                    .then(function(newUser) {
-                        return response.status(201).json({
-                            'userId': newUser.id, 'sucess': 'User successfully created'
-                        })
-                    })
-                    .catch(function(err) {
-                        return response.status(400).json({'error': 'An error occured.'})
-                    })
-                })
-            } else {
-                return response.status(409).json({'error': 'user already exist.'})
-            }
-        })
-        .catch(function(err) {
-            return response.status(500).json({'error': 'unable to verify user'})
-        })
-*/
     },
     update: (request, response) => {
         const id = request.params.id;
         let lastName = request.body.lastName;
         let firstName = request.body.firstName;
         let email = request.body.email;
+        let password = request.body.password
         asyncLib.waterfall([
             (done) => {
                 models.users.findOne({
-                    attributes: [ 'id', 'email', 'firstName', 'lastName', 'role'],
+                    attributes: [ 'id', 'email', 'firstName', 'lastName', 'role', 'password'],
                     where: { id: id}
                 })
                 .then((userFound) => {
@@ -137,8 +111,10 @@ module.exports = {
                   userFound.update({
                       lastName: (lastName ? lastName : userFound.lastName),
                       firstName: (firstName ? firstName : userFound.firstName),
-                      email: (email ? email : userFound.email)
+                      email: (email ? email : userFound.email),
+                      password: (password ? password : userFound.password)
                   })
+
                   .then((userFound) => {
                       done(userFound);
                   })
@@ -161,29 +137,7 @@ module.exports = {
             }
         )        
     },
-    /*update: (request, response) => {
-        const id = request.params.id;
-        models.users.update(request.params, {
-            attributes: ['id', 'lastName', 'firstName', 'email', 'role'],
-            where: { id: id }
-          })
-        .then(num => {
-        if (num == 1) {
-            response.status(200).send({
-            message: "User was modified successfully."
-            });
-        } else {
-            response.status(400).send({
-            message: `An error occurred : cannot update user with id=${id}.`
-            });
-        }
-        })
-        .catch(err => {
-        response.status(404).send({
-            message: "User with id=" + id + " was not found"
-        });
-        });
-      },*/
+
     delete: (request, response) => {
         // Parameters
         const id = request.params.id;
@@ -238,12 +192,12 @@ module.exports = {
             if (data) {
                 response.status(200).send(data);
             }
-          })
-          .catch(err => {
+        })
+        .catch(err => {
             response.status(400).send({
-              message: "An error occurred : while retrieving users."
+                message: "An error occurred : while retrieving users."
             });
-          });
+        });
       },
     login: (request, response) => {
 
@@ -280,33 +234,56 @@ module.exports = {
     }
 }
 
-/*models.users.findOne({
-    attributes: ['email'],
-    where: { email: email}
-})
-.then(function(userFound) {
-    if (userFound) {
-            let newUser = models.users.update({
-                lastName: lastName,
-                firstName: firstName,
-                email: email,
-                password: bcryptedPassword,
-                role: role
-            })
-            .then(function(newUser) {
-                return response.status(201).json({
-                    'userId': newUser.id, 'sucess': 'User successfully created'
-                })
-            })
-            .catch(function(err) {
-                return response.status(400).json({'error': 'An error occured.'})
-            })
-    } else {
-        return response.status(409).json({'error': 'user do not exist.'})
-    }
-})
-.catch(function(err) {
-    return response.status(500).json({'error': 'unable to update user with id=' + id})
-})
 
-},*/
+/* exports.register = (req, res) => {
+    
+}
+
+exports.login = (req, res) => {
+    
+}*/
+
+/*update: (request, response) => {
+            const id = request.params.id;
+            let lastName = request.body.lastName;
+            let firstName = request.body.firstName;
+            let email = request.body.email;
+            let password = request.body.password  
+            
+        models.users.findOne({
+            attributes: [ 'id', 'email', 'firstName', 'lastName', 'role', 'password'],
+            where: { id: id}
+        })
+        .then(userFound => {
+            if (userFound) {
+                response.status(200).json({'success': 'User successfuly modified'})
+            } else {
+            return response.status(400).json({ 'error': 'An error occurred' });
+            }
+          })
+        .catch((err) => {
+            return response.status(400).json({ 'error': 'Unable to verify user' });
+        });
+        models.users.update(request.body, {
+            lastName: (lastName ? lastName : userFound.lastName),
+            firstName: (firstName ? firstName : userFound.firstName),
+            email: (email ? email : userFound.email),
+            password: (password ? password : userFound.password)
+        })
+        .then(num => {
+          if (num == 1) {
+            response.send({
+              message: "user was updated successfully."
+            });
+          } else {
+            response.send({
+              message: `Cannot update user with id=${id}.`
+            });
+          }
+        })
+        .catch(err => {
+            response.status(500).send({
+            message: "Error updating user with id=" + id
+          });
+        });
+    },*/

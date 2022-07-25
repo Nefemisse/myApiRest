@@ -3,9 +3,8 @@ let express = require('express');
 let usersCtrl = require('./routes/usersCtrl')
 
 // Router
-exports.router = (function() {
+exports.router = (() => {
     let apiRouter = express.Router();
-
     // Users routes
     apiRouter.route('/users/register/').post(usersCtrl.register)
     apiRouter.route('/user/:id/').put(usersCtrl.update)
